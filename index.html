@@ -1,1 +1,265 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Discord Webhook Spammer</title>
+    <style>
+        body {
+            font-family: 'Roboto Mono', monospace;
+            background-color: #18191c;
+            color: #7289da;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            flex-direction: column;
+            margin: 0;
+            padding: 0;
+            transition: background-color 0.3s ease; /* Add transition for background color change */
+        }
 
+        .container {
+            background-color: #2f3136;
+            border-radius: 10px;
+            padding: 30px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.7);
+            max-width: 500px;
+            width: 100%;
+            animation: glow 2s linear infinite alternate; /* Add animation to container */
+        }
+
+        @keyframes glow {
+            0% {
+                box-shadow: 0 0 10px rgba(114, 137, 218, 0.7);
+            }
+            100% {
+                box-shadow: 0 0 20px rgba(114, 137, 218, 1);
+            }
+        }
+
+        h1 {
+            text-align: center;
+            font-size: 28px;
+            margin-bottom: 20px;
+            color: #b9bbbe;
+            animation: flicker 1s linear infinite alternate;
+        }
+
+        @keyframes flicker {
+            0% {
+                opacity: 1;
+            }
+            50% {
+                opacity: 0.5;
+            }
+            100% {
+                opacity: 1;
+            }
+        }
+
+        label {
+            display: block;
+            margin-bottom: 5px;
+            color: #b9bbbe;
+            font-size: 14px;
+        }
+
+        input,
+        textarea {
+            width: 100%;
+            padding: 12px;
+            margin-bottom: 15px;
+            border: 1px solid #7289da;
+            background-color: #2f3136;
+            color: #dcddde;
+            border-radius: 5px;
+            box-sizing: border-box;
+            font-family: inherit;
+            transition: background-color 0.3s ease;
+        }
+
+        input:focus,
+        textarea:focus {
+            background-color: #36393f;
+            outline: none;
+        }
+
+        button {
+            background-color: #7289da;
+            color: #fff;
+            padding: 15px 20px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+            font-size: 16px;
+            font-weight: bold;
+            width: 100%;
+            animation: bounce 1s ease-in-out infinite alternate;
+        }
+
+        @keyframes bounce {
+            0% {
+                transform: translateY(0);
+            }
+            50% {
+                transform: translateY(-5px);
+            }
+            100% {
+                transform: translateY(0);
+            }
+        }
+
+
+        button:hover {
+            background-color: #5865f2;
+        }
+
+        #status {
+            margin-top: 20px;
+            text-align: center;
+            font-size: 16px;
+            color: #b9bbbe;
+            animation: fadeInOut 1s ease-in-out infinite alternate;
+        }
+
+        @keyframes fadeInOut {
+            0% {
+                opacity: 1;
+            }
+            50% {
+                opacity: 0.5;
+            }
+            100% {
+                opacity: 1;
+            }
+        }
+
+        .error {
+            color: #f04747;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Discord Webhook Spammer</h1>
+        <label for="webhookUrl">Webhook URL:</label>
+        <input type="text" id="webhookUrl" placeholder="Enter your webhook URL here">
+
+        <label for="message">Message:</label>
+        <textarea id="message" rows="4" placeholder="Enter the message you want to spam"></textarea>
+
+        <label for="delay">Delay (ms):</label>
+        <input type="number" id="delay" value="500">
+
+        <label for="amount">Amount:</label>
+        <input type="number" id="amount" value="10">
+
+        <button id="startSpam">Start Spamming</button>
+        <button id="deleteWebhook">Delete Webhook</button>
+
+        <div id="status"></div>
+    </div>
+
+    <script>
+        const webhookUrlInput = document.getElementById('webhookUrl');
+        const messageInput = document.getElementById('message');
+        const delayInput = document.getElementById('delay');
+        const amountInput = document.getElementById('amount');
+        const startButton = document.getElementById('startSpam');
+        const deleteButton = document.getElementById('deleteWebhook');
+        const statusDiv = document.getElementById('status');
+
+        startButton.addEventListener('click', () => {
+            const webhookUrl = webhookUrlInput.value.trim();
+            const message = messageInput.value;
+            const delay = parseInt(delayInput.value);
+            const amount = parseInt(amountInput.value);
+
+            if (!webhookUrl || !message || isNaN(delay) || isNaN(amount)) {
+                statusDiv.textContent = 'Please fill in all fields with valid values.';
+                statusDiv.classList.add('error');
+                return;
+            }
+
+            statusDiv.textContent = 'Spamming...';
+            statusDiv.classList.remove('error');
+
+            spamWebhook(webhookUrl, message, delay, amount);
+        });
+        
+        deleteButton.addEventListener('click', () => {
+            const webhookUrl = webhookUrlInput.value.trim();
+            if (!webhookUrl) {
+                statusDiv.textContent = 'Please enter a webhook URL to delete.';
+                statusDiv.classList.add('error');
+                return;
+            }
+
+            statusDiv.textContent = 'Deleting webhook...';
+            statusDiv.classList.remove('error');
+
+            deleteWebhook(webhookUrl);
+        });
+
+        async function spamWebhook(webhookUrl, message, delay, amount) {
+            for (let i = 0; i < amount; i++) {
+                try {
+                    const response = await fetch(webhookUrl, {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify({
+                            content: message
+                        })
+                    });
+
+                    if (response.ok) {
+                        console.log(`Message ${i + 1} sent successfully.`);
+                    } else {
+                        console.error(`Failed to send message ${i + 1}: ${response.status} ${response.statusText}`);
+                        statusDiv.textContent = `Failed to send message ${i + 1}: ${response.status} ${response.statusText}`;
+                        statusDiv.classList.add('error');
+                        return;
+                    }
+                } catch (error) {
+                    console.error(`Failed to send message ${i + 1}: ${error}`);
+                    statusDiv.textContent = `Failed to send message ${i + 1}: ${error}`;
+                    statusDiv.classList.add('error');
+                    return;
+                }
+
+                await new Promise(resolve => setTimeout(resolve, delay));
+            }
+
+            statusDiv.textContent = 'Spamming finished.';
+            statusDiv.classList.remove('error');
+        }
+
+        async function deleteWebhook(webhookUrl) {
+            try {
+                const response = await fetch(webhookUrl, {
+                    method: 'DELETE'
+                    
+                });
+    
+                if (response.ok) {
+                    console.log('Webhook deleted successfully');
+                    statusDiv.textContent = 'Webhook deleted successfully.';
+                } else {
+                    console.error(`Failed to delete webhook: ${response.status} ${response.statusText}`);
+                    statusDiv.textContent = `Failed to delete webhook: ${response.status} ${response.statusText}`;
+                    statusDiv.classList.add('error');
+                }
+            } catch (error) {
+                console.error('Failed to delete webhook: ', error);
+                statusDiv.textContent = `Failed to delete webhook: ${error}`;
+                statusDiv.classList.add('error');
+            }
+          }
+    </script>
+</body>
+
+</html>
